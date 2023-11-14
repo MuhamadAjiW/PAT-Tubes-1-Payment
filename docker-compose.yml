@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8080"
+    depends_on:
+      - db
+    networks:
+      - dockerNet
+  db:
+    image: mysql:latest
+    ports:
+      - "8183:3306"
+    env_file: .env_docker
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - ./db:/var/lib/mysql
+    networks:
+      - dockerNet
+networks:
+  dockerNet:
+    external:
+      true
