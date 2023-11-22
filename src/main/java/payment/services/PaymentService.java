@@ -1,5 +1,6 @@
 package payment.services;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,7 +28,7 @@ public class PaymentService {
     }
 
     @PostMapping("/api/payments")
-    public String create(@RequestBody PaymentRequest paymentRequest){
+    public ResponseEntity<?> create(@RequestBody PaymentRequest paymentRequest){
         boolean fail = FailureUtil.simulate();
 
         System.out.println("Received payment data: " + paymentRequest.getEmail() + " " + paymentRequest.getTicket_id());
@@ -48,8 +49,8 @@ public class PaymentService {
             System.out.println("Payment successful!");
             // TODO: Simulate success
         }
-        PDFUtil.generateInvoice(invoice);
+        String title = PDFUtil.generateInvoice(invoice);
 
-        return "Payment Server is Running";
+        return PDFService.getSignature(title);
     }
 }

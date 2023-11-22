@@ -5,12 +5,14 @@ import com.itextpdf.text.pdf.PdfWriter;
 import payment.models.Invoice;
 
 import java.io.FileOutputStream;
+import java.time.Duration;
+import java.time.Instant;
 
 public class PDFUtil {
+    public static String basepath = "./src/main/resources/static/";
     public static String generateInvoice(Invoice invoice){
         try{
             Document document = new Document();
-            String basepath = "./src/main/resources/static/";
             String title = invoice.getEmail() + "_" +
                             invoice.getTimestamp().toString().replace(":", "-") +
                             ".pdf";
