@@ -5,15 +5,25 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8083:8080"
+      - 8190:8080
     depends_on:
       - db
+    networks:
+      - dockerNet
+  queue:
+    image: rabbitmq:3.13.0-rc.2-management
+    ports:
+      - 8191:5672
+      - 8192:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: test-user
+      RABBITMQ_DEFAULT_PASS: test-user
     networks:
       - dockerNet
   db:
     image: mysql:latest
     ports:
-      - "8183:3306"
+      - 8193:3306
     env_file: .env_docker
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
