@@ -1,6 +1,6 @@
-package payment.middleware;
+package payment.util;
 
-public class FailureMiddleware {
+public class FailureUtil {
     public static boolean simulate(){
         double randomValue = Math.random() * 100;
 

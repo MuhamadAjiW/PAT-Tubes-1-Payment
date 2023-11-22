@@ -5,9 +5,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import payment.dao.InvoiceDAO;
-import payment.middleware.FailureMiddleware;
+import payment.util.FailureUtil;
 import payment.models.Invoice;
 import payment.util.HibernateUtil;
+import payment.util.PDFUtil;
 import payment.util.classes.PaymentRequest;
 
 import java.time.Instant;
@@ -27,7 +28,7 @@ public class PaymentService {
 
     @PostMapping("/api/payments")
     public String create(@RequestBody PaymentRequest paymentRequest){
-        boolean fail = FailureMiddleware.simulate();
+        boolean fail = FailureUtil.simulate();
 
         System.out.println("Received payment data: " + paymentRequest.getEmail() + " " + paymentRequest.getTicket_id());
 
@@ -47,6 +48,7 @@ public class PaymentService {
             System.out.println("Payment successful!");
             // TODO: Simulate success
         }
+        PDFUtil.generateInvoice(invoice);
 
         return "Payment Server is Running";
     }
