@@ -13,26 +13,50 @@ public class RabbitMQUtil {
     }
 
     @Bean
-    public Queue invoiceQueue() {
-        return new Queue("invoice-queue");
+    public Queue outgoingInvoiceQueue() {
+        return new Queue("outgoing-invoice-queue");
     }
 
     @Bean
-    public Binding invoicebinding(Queue invoiceQueue, DirectExchange paymentExchange) {
+    public Binding outgoingInvoicebinding(Queue outgoingInvoiceQueue, DirectExchange paymentExchange) {
         return BindingBuilder
-                .bind(invoiceQueue).to(paymentExchange)
-                .with("invoice-queue");
+                .bind(outgoingInvoiceQueue).to(paymentExchange)
+                .with("outgoing-invoice-queue");
     }
 
     @Bean
-    public Queue paymentQueue() {
-        return new Queue("payment-queue");
+    public Queue outgoingPaymentQueue() {
+        return new Queue("outgoing-payment-queue");
     }
 
     @Bean
-    public Binding paymentbinding(Queue paymentQueue, DirectExchange paymentExchange) {
+    public Binding outgoingPaymentbinding(Queue outgoingPaymentQueue, DirectExchange paymentExchange) {
         return BindingBuilder
-                .bind(paymentQueue).to(paymentExchange)
-                .with("payment-queue");
+                .bind(outgoingPaymentQueue).to(paymentExchange)
+                .with("outgoing-payment-queue");
+    }
+
+    @Bean
+    public Queue incomingInvoiceQueue() {
+        return new Queue("incoming-invoice-queue");
+    }
+
+    @Bean
+    public Binding incomingInvoicebinding(Queue incomingInvoiceQueue, DirectExchange paymentExchange) {
+        return BindingBuilder
+                .bind(incomingInvoiceQueue).to(paymentExchange)
+                .with("incoming-invoice-queue");
+    }
+
+    @Bean
+    public Queue incomingPaymentQueue() {
+        return new Queue("incoming-payment-queue");
+    }
+
+    @Bean
+    public Binding incomingPaymentbinding(Queue incomingPaymentQueue, DirectExchange paymentExchange) {
+        return BindingBuilder
+                .bind(incomingPaymentQueue).to(paymentExchange)
+                .with("incoming-payment-queue");
     }
 }

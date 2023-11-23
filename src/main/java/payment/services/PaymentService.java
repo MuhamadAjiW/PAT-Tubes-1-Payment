@@ -40,6 +40,8 @@ public class PaymentService {
 
     @PostMapping("")
     public ResponseEntity<?> create(@RequestBody InvoiceRequest invoiceRequest){
+        //TODO: This should trigger a webhook, not a rabbitMQ message
+
         System.out.println("Received invoice request: " + invoiceRequest.getEmail() + " " + invoiceRequest.getTicketId());
 
         Invoice invoice = new Invoice();
@@ -56,7 +58,7 @@ public class PaymentService {
 
             System.out.println(message);
 
-            rabbitTemplate.convertAndSend("payment-exchange", "invoice-queue",
+            rabbitTemplate.convertAndSend("payment-exchange", "outgoing-invoice-queue",
                     new Response(message, false, null).toJsonString());
 
             return ResponseEntity.ok().build();
@@ -70,7 +72,7 @@ public class PaymentService {
         jsonResponse.put("url", url);
         jsonResponse.put("invoiceNumber", invoice.getInvoiceNumber());
 
-        rabbitTemplate.convertAndSend("payment-exchange", "invoice-queue",
+        rabbitTemplate.convertAndSend("payment-exchange", "outgoing-invoice-queue",
                 new Response("Invoice Request Success", true, jsonResponse).toJsonString());
 
         return ResponseEntity.ok().build();
@@ -78,6 +80,8 @@ public class PaymentService {
 
     @PostMapping(value = "/pay", params = "signature")
     public ResponseEntity<?> pay(@RequestParam String signature, @RequestBody PaymentRequest paymentRequest){
+        //TODO: This should trigger a webhook, not a rabbitMQ message
+
         System.out.println("Received payment request: " + paymentRequest.getInvoiceNumber());
 
         boolean valid;
@@ -89,7 +93,7 @@ public class PaymentService {
 
             System.out.println(message);
 
-            rabbitTemplate.convertAndSend("payment-exchange", "payment-queue",
+            rabbitTemplate.convertAndSend("payment-exchange", "outgoing-payment-queue",
                     new Response(message, false, null).toJsonString());
 
             return ResponseEntity.ok().build();
@@ -105,7 +109,7 @@ public class PaymentService {
 
                 System.out.println(message);
 
-                rabbitTemplate.convertAndSend("payment-exchange", "payment-queue",
+                rabbitTemplate.convertAndSend("payment-exchange", "outgoing-payment-queue",
                         new Response(message, false, null).toJsonString());
 
                 return ResponseEntity.ok().build();
@@ -121,7 +125,7 @@ public class PaymentService {
                 System.out.println("Signature: " + signInvoiceNumber);
                 System.out.println("Body: " + paymentRequest.getInvoiceNumber());
 
-                rabbitTemplate.convertAndSend("payment-exchange", "payment-queue",
+                rabbitTemplate.convertAndSend("payment-exchange", "outgoing-payment-queue",
                         new Response(message, false, null).toJsonString());
 
                 return ResponseEntity.ok().build();
@@ -136,7 +140,7 @@ public class PaymentService {
 
                     System.out.println(message);
 
-                    rabbitTemplate.convertAndSend("payment-exchange", "payment-queue",
+                    rabbitTemplate.convertAndSend("payment-exchange", "outgoing-payment-queue",
                             new Response(message, false, null).toJsonString());
                     return ResponseEntity.ok().build();
                 }
@@ -153,7 +157,7 @@ public class PaymentService {
 
                 System.out.println(message);
 
-                rabbitTemplate.convertAndSend("payment-exchange", "payment-queue",
+                rabbitTemplate.convertAndSend("payment-exchange", "outgoing-payment-queue",
                         new Response(message, true, invoice).toJsonString());
 
                 return ResponseEntity.ok().build();
@@ -162,7 +166,7 @@ public class PaymentService {
 
                 System.out.println(message);
 
-                rabbitTemplate.convertAndSend("payment-exchange", "payment-queue",
+                rabbitTemplate.convertAndSend("payment-exchange", "outgoing-payment-queue",
                         new Response(message, false, null).toJsonString());
 
                 return ResponseEntity.ok().build();
@@ -172,7 +176,7 @@ public class PaymentService {
 
             System.out.println(message);
 
-            rabbitTemplate.convertAndSend("payment-exchange", "payment-queue",
+            rabbitTemplate.convertAndSend("payment-exchange", "outgoing-payment-queue",
                     new Response(message, false, null).toJsonString());
 
             return ResponseEntity.ok().build();

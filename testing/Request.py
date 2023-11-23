@@ -3,7 +3,7 @@ import pika
 import json
 
 basehost = "localhost"
-baseport = "8190"
+baseport = "8080"
 baseurl = "http://" + basehost + ":" + baseport
 
 rabbitmqHost = "localhost"
@@ -38,11 +38,9 @@ def pay(invoiceNumber, endpoint):
 
 ## RabbitMQ
 def add_invoice_to_queue(email, event_id, ticket_id):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(rabbitmqHost, rabbitmqPort))
+    rabbitmq_credentials = pika.PlainCredentials('test-user', 'test-user')
+    connection = pika.BlockingConnection(pika.ConnectionParameters(rabbitmqHost, rabbitmqPort, '/', rabbitmq_credentials))
     channel = connection.channel()
-
-    # Declare a queue named 'invoice_queue'
-    channel.queue_declare(queue='invoice_queue', durable=True)
 
     data = {
         "email": email,
@@ -50,10 +48,9 @@ def add_invoice_to_queue(email, event_id, ticket_id):
         "ticketId": ticket_id
     }
 
-    # Convert data to JSON and publish it to the 'invoice_queue'
     channel.basic_publish(
-        exchange='',
-        routing_key='invoice_queue',
+        exchange='payment-exchange',
+        routing_key='incoming-invoice-queue',
         body=json.dumps(data),
         properties=pika.BasicProperties(
             delivery_mode=2,  # Make the message persistent
@@ -65,12 +62,12 @@ def add_invoice_to_queue(email, event_id, ticket_id):
     connection.close()
 
 if __name__ == "__main__":
-    response = add_invoice("Test@email.com", 1, 1)
+    # response = add_invoice("Test@email.com", 1, 1)
     # response = pay("INVFC04B978-8FCC-44CA-AB50-CAA28B34959C",
                     # "/api/payments/pay?signature=VepxOcb2MZpYwVgA1K6vYsHEAYdGN2chMiyaqaRstwMnY6cPrEat9invV3yfMU_jwuSg--pJGycWRfkhLDsU3lgC13AtYndHbnr60Z4ti1XCPGgbYv7-9-fegiIQFviA")
 
-    # add_invoice_to_queue("Test@email.com", 1, 1)            
+    add_invoice_to_queue("Test@email.com", 1, 1)            
 
-    print("\nstatus code:", response.status_code)
-    print("Response content:")
-    print(response.text)
+    # print("\nstatus code:", response.status_code)
+    # print("Response content:")
+    # print(response.text)
