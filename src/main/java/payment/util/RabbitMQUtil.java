@@ -13,12 +13,26 @@ public class RabbitMQUtil {
     }
 
     @Bean
+    public Queue invoiceQueue() {
+        return new Queue("invoice-queue");
+    }
+
+    @Bean
+    public Binding invoicebinding(Queue invoiceQueue, DirectExchange paymentExchange) {
+        return BindingBuilder
+                .bind(invoiceQueue).to(paymentExchange)
+                .with("invoice-queue");
+    }
+
+    @Bean
     public Queue paymentQueue() {
         return new Queue("payment-queue");
     }
 
     @Bean
-    public Binding binding(Queue paymentQueue, DirectExchange paymentExchange) {
-        return BindingBuilder.bind(paymentQueue).to(paymentExchange).with("payment-queue");
+    public Binding paymentbinding(Queue paymentQueue, DirectExchange paymentExchange) {
+        return BindingBuilder
+                .bind(paymentQueue).to(paymentExchange)
+                .with("payment-queue");
     }
 }
