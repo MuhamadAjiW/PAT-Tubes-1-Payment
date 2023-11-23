@@ -1,6 +1,6 @@
 package payment.services;
 
-import com.mongodb.client.result.UpdateResult;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,14 +21,15 @@ import java.util.UUID;
 @RequestMapping("/api/payments")
 public class PaymentService {
     private final InvoiceRepository invoiceRepository;
-//    private final RabbitTemplate rabbitTemplate;
+    private final RabbitTemplate rabbitTemplate;
 
     public static String generateInvoiceNumber() {
         return "INV" + UUID.randomUUID().toString().toUpperCase();
     }
     @Autowired
-    public PaymentService(InvoiceRepository invoiceRepository){
+    public PaymentService(InvoiceRepository invoiceRepository, RabbitTemplate rabbitTemplate){
         this.invoiceRepository = invoiceRepository;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @GetMapping("")
@@ -98,27 +99,20 @@ public class PaymentService {
             try {
                 Invoice invoice = this.invoiceRepository.findByInvoiceNumber(signInvoiceNumber);
 
+                // Reject successfully paid invoices
                 if(invoice.getStatus() == PaymentStatus.DONE){
                     return ResponseEntity.badRequest().build();
                 }
 
                 boolean fail = FailureUtil.simulate();
                 if(fail){
-                    // TODO: Handle failure
                     invoice.setStatus(PaymentStatus.FAILED);
                 } else{
-                    // TODO: Handle success
                     invoice.setStatus(PaymentStatus.DONE);
                 }
                 invoice = this.invoiceRepository.save(invoice);
 
-                String title = PDFService.generateInvoicePDF(invoice);
-                String pdfSignature = SignatureUtil.generateSignature(title, SignatureUtil.PDFexpiry);
-                String url = "/pdf/file?signature=" + pdfSignature;
-
-                String jsonResponse = String.format("{\"url\":\"%s\",\"invoiceNumber\":\"%s\"}", url, invoice.getInvoiceNumber());
-
-                return ResponseEntity.ok().body(jsonResponse);
+                return ResponseEntity.ok().body(invoice);
             } catch (Exception e){
                 System.out.println("Failed to execute query or generate pdf url");
                 return ResponseEntity.internalServerError().build();

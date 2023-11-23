@@ -1,5 +1,7 @@
 package payment.util;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -11,7 +13,6 @@ import java.util.Base64;
 
 // Naive implementation of signed urls using AES
 public class SignatureUtil {
-    public static final Duration PDFexpiry = Duration.ofSeconds(300);
     public static final Duration PaymentExpiry = Duration.ofSeconds(300);
 
     private static final SecretKey secretKey = new SecretKeySpec("signedsignedsignedsignedsignedee".getBytes(), "AES");
@@ -21,7 +22,7 @@ public class SignatureUtil {
         try{
             Instant expiration = Instant.now().plus(expiryFromNow);
             String formattedTimestamp = timeFormatter.format(expiration);
-            String salt = "RandomlyGeneratedString";
+            String salt = RandomStringUtils.randomAlphabetic(20);;
             return encryptSignature(identifier + "|" + formattedTimestamp + "|" + salt);
         } catch (Exception e){
             e.printStackTrace();
