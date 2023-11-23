@@ -1,15 +1,15 @@
 version: '3.8'
 services:
-#  api:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    ports:
-#      - 8190:8080
-#    depends_on:
-#      - db
-#    networks:
-#      - dockerNet
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8190:8080
+    depends_on:
+      - db
+    networks:
+      - dockerNet
   queue:
     image: rabbitmq:3.13.0-rc.2-management
     ports:

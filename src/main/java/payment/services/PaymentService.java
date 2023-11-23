@@ -37,15 +37,15 @@ public class PaymentService {
     }
 
     @PostMapping("")
-    public ResponseEntity<?> create(@RequestBody InvoiceRequest paymentRequest){
-        System.out.println("Received payment data: " + paymentRequest.getEmail() + " " + paymentRequest.getTicketId());
+    public ResponseEntity<?> create(@RequestBody InvoiceRequest invoiceRequest){
+        System.out.println("Received invoice request: " + invoiceRequest.getEmail() + " " + invoiceRequest.getTicketId());
 
         Invoice invoice = new Invoice();
         invoice.setInvoiceNumber(generateInvoiceNumber());
         invoice.setTimestamp(Instant.now());
-        invoice.setEmail(paymentRequest.getEmail());
-        invoice.setEventId(paymentRequest.getEventId());
-        invoice.setTicketId(paymentRequest.getTicketId());
+        invoice.setEmail(invoiceRequest.getEmail());
+        invoice.setEventId(invoiceRequest.getEventId());
+        invoice.setTicketId(invoiceRequest.getTicketId());
         invoice.setStatus(PaymentStatus.PENDING);
 
         String signature = SignatureUtil.generateSignature(invoice.getInvoiceNumber(), SignatureUtil.PaymentExpiry);
@@ -63,6 +63,7 @@ public class PaymentService {
 
     @PostMapping(value = "/pay", params = "signature")
     public ResponseEntity<?> download(@RequestParam String signature, @RequestBody PaymentRequest paymentRequest){
+        System.out.println("Received payment request: " + paymentRequest.getInvoiceNumber());
 
         boolean valid;
         try {
@@ -95,22 +96,32 @@ public class PaymentService {
             }
 
             try {
+                Invoice invoice = this.invoiceRepository.findByInvoiceNumber(signInvoiceNumber);
+
+                if(invoice.getStatus() == PaymentStatus.DONE){
+                    return ResponseEntity.badRequest().build();
+                }
+
                 boolean fail = FailureUtil.simulate();
                 if(fail){
                     // TODO: Handle failure
-                    return ResponseEntity.internalServerError().build();
+                    invoice.setStatus(PaymentStatus.FAILED);
                 } else{
-                    // TODO: Build and get PDF
-                    Invoice invoice = this.invoiceRepository.findByInvoiceNumber(signInvoiceNumber);
+                    // TODO: Handle success
                     invoice.setStatus(PaymentStatus.DONE);
-                    invoice = this.invoiceRepository.save(invoice);
-                    return ResponseEntity.ok().body(invoice);
                 }
+                invoice = this.invoiceRepository.save(invoice);
 
+                String title = PDFService.generateInvoicePDF(invoice);
+                String pdfSignature = SignatureUtil.generateSignature(title, SignatureUtil.PDFexpiry);
+                String url = "/pdf/file?signature=" + pdfSignature;
+
+                String jsonResponse = String.format("{\"url\":\"%s\",\"invoiceNumber\":\"%s\"}", url, invoice.getInvoiceNumber());
+
+                return ResponseEntity.ok().body(jsonResponse);
             } catch (Exception e){
-                e.printStackTrace();
-                System.out.println("Failed to execute query");
-                return ResponseEntity.notFound().build();
+                System.out.println("Failed to execute query or generate pdf url");
+                return ResponseEntity.internalServerError().build();
             }
         } else{
             System.out.println("Invalid signature");

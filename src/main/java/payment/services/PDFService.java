@@ -76,7 +76,7 @@ public class PDFService {
         }
     }
 
-    public static String generateInvoicePDF(Invoice invoice){
+    public static String generateInvoicePDF(Invoice invoice) throws Exception{
         try{
             Document document = new Document();
             String title = invoice.getEmail() + "_" +
@@ -107,8 +107,8 @@ public class PDFService {
             System.out.println("PDF successfully created");
             return title;
         } catch (Exception e){
-            System.out.println("Failed creating PDF");
-            return null;
+            e.printStackTrace();
+            throw e;
         }
     }
 }
