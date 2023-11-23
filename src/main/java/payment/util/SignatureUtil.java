@@ -12,13 +12,21 @@ import java.util.Base64;
 // Naive implementation of signed urls using AES
 public class SignatureUtil {
     public static final Duration PDFexpiry = Duration.ofSeconds(300);
-    public static final Duration InvoiceExpiry = Duration.ofSeconds(300);
+    public static final Duration PaymentExpiry = Duration.ofSeconds(300);
+
     private static final SecretKey secretKey = new SecretKeySpec("signedsignedsignedsignedsignedee".getBytes(), "AES");
     private static final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss.SSS").withZone(ZoneId.systemDefault());
-    public static String generateSignature(String identifier, Instant expiration) throws Exception {
-        String formattedTimestamp = timeFormatter.format(expiration);
-        String salt = "RandomlyGeneratedString";
-        return encryptSignature(identifier + "|" + formattedTimestamp + "|" + salt);
+
+    public static String generateSignature(String identifier, Duration expiryFromNow){
+        try{
+            Instant expiration = Instant.now().plus(expiryFromNow);
+            String formattedTimestamp = timeFormatter.format(expiration);
+            String salt = "RandomlyGeneratedString";
+            return encryptSignature(identifier + "|" + formattedTimestamp + "|" + salt);
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public static boolean verifySignature(String signature) throws Exception{

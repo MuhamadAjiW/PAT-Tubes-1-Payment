@@ -1,5 +1,6 @@
 *.pdf
 db/
+rabbitmq/
 
 HELP.md
 target/

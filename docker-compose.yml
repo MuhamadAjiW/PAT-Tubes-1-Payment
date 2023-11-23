@@ -1,15 +1,15 @@
 version: '3.8'
 services:
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - 8190:8080
-    depends_on:
-      - db
-    networks:
-      - dockerNet
+#  api:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    ports:
+#      - 8190:8080
+#    depends_on:
+#      - db
+#    networks:
+#      - dockerNet
   queue:
     image: rabbitmq:3.13.0-rc.2-management
     ports:
@@ -18,20 +18,26 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: test-user
       RABBITMQ_DEFAULT_PASS: test-user
+    volumes:
+      - ./rabbitmq:/var/lib/rabbitmq
     networks:
       - dockerNet
   db:
-    image: mysql:latest
+    image: mongodb/mongodb-community-server:latest
     ports:
-      - 8193:3306
-    env_file: .env_docker
-    environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-    volumes:
-      - ./db:/var/lib/mysql
-      - ./db:/docker-entrypoint-initdb.d
-    networks:
-      - dockerNet
+      - 8193:27017
+#  db:
+#    image: mysql:latest
+#    ports:
+#      - 8193:3306
+#    env_file: .env_docker
+#    environment:
+#      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+#    volumes:
+#      - ./db:/var/lib/mysql
+#      - ./db:/docker-entrypoint-initdb.d
+#    networks:
+#      - dockerNet
 networks:
   dockerNet:
     external:

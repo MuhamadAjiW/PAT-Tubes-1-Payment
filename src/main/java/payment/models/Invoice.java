@@ -1,31 +1,20 @@
 package payment.models;
 
-import jakarta.persistence.*;
 import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import payment.enums.PaymentStatus;
 
 import java.time.Instant;
 
 @Data
-@Entity
-@Table(name = "invoice")
+@Document(collection = "Invoice")
 public class Invoice {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false)
-    private int id;
-
-    @Column(nullable = false)
-    private Instant timestamp;
-
-    @Column(nullable = false)
-    private Boolean success;
-
-    @Column(nullable = false)
+    private String invoiceNumber;
     private String email;
-
-    @Column(nullable = false)
-    private int event_id;
-
-    @Column(nullable = false)
-    private int ticket_id;
+    private int eventId;
+    private int ticketId;
+    private Instant timestamp;
+    private PaymentStatus status;
 }
