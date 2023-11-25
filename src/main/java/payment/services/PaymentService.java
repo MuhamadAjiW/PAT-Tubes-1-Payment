@@ -23,6 +23,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/payments")
 public class PaymentService {
+    private final String paymentEndpoint = "/payment";
+    private final String TicketServiceWebhookURL = ApiUtil.TicketServiceURL + "/webhook";
+    private final String TicketServiceWebhookPaymentEndpoint = TicketServiceWebhookURL + paymentEndpoint;
     private final InvoiceRepository invoiceRepository;
     private final RabbitTemplate rabbitTemplate;
 
@@ -35,14 +38,22 @@ public class PaymentService {
         this.rabbitTemplate = rabbitTemplate;
 
         try {
-            Response response = ApiUtil.call(ApiUtil.TicketServiceURL + "/webhook/clients", HttpRequestMethod.POST, null);
+            Response response = ApiUtil.call(TicketServiceWebhookURL + "/clients", HttpRequestMethod.POST);
 
+            System.out.println(response);
             if(response.isValid()){
                 ApiUtil.TicketWebhookToken = (String) ((JSONObject)response.getData()).get("token");
                 System.out.println(ApiUtil.TicketWebhookToken);
 
+                JSONObject webhookdata = new JSONObject();
+                webhookdata.put("eventName", "payment");
+                webhookdata.put("endpoint", paymentEndpoint);
+
+                response = ApiUtil.call(TicketServiceWebhookURL, HttpRequestMethod.POST, webhookdata, ApiUtil.TicketWebhookToken);
+                System.out.println(response);
             } else{
                 System.out.println("Webhook already registered");
+                //TODO: Add special privilege method to reclaim token and recheck webhook addresses
             }
         } catch (Exception e){
             e.printStackTrace();
@@ -92,7 +103,7 @@ public class PaymentService {
 
         try {
             System.out.println("Triggering invoice request webhook");
-            Response response = ApiUtil.call(ApiUtil.TicketServiceURL, HttpRequestMethod.POST, jsonResponse);
+            Response response = ApiUtil.call(TicketServiceWebhookPaymentEndpoint, HttpRequestMethod.POST, jsonResponse, ApiUtil.TicketWebhookToken);
             System.out.println(response);
         } catch (Exception e){
             this.invoiceRepository.delete(invoice);

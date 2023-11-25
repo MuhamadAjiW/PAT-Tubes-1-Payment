@@ -16,12 +16,28 @@ public class ApiUtil {
     public static String TicketServiceURL = "http://[::1]:3100";
     public static String TicketWebhookToken;
 
-    public static Response call(String apiUrl, HttpRequestMethod method, JSONObject postData) throws IOException {
+    public static Response call(String apiUrl, HttpRequestMethod method) throws IOException{
+        return call(apiUrl, method, null, null);
+    }
+
+    public static Response call(String apiUrl, HttpRequestMethod method, String apiKey) throws IOException{
+        return call(apiUrl, method, null, apiKey);
+    }
+
+    public static Response call(String apiUrl, HttpRequestMethod method, JSONObject postData) throws IOException{
+        return call(apiUrl, method, postData, null);
+    }
+
+    public static Response call(String apiUrl, HttpRequestMethod method, JSONObject postData, String apiKey) throws IOException {
         URL url = new URL(apiUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
         connection.setRequestMethod(method.getString());
 
+        connection.setRequestProperty("Authorization", "Bearer paymentServerApiToken");
+        if (apiKey != null){
+            connection.setRequestProperty("API-Key", apiKey);
+        }
         if (postData != null) {
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setDoOutput(true);
@@ -33,16 +49,16 @@ public class ApiUtil {
             }
         }
 
-        connection.setRequestProperty("Authorization", "Bearer paymentServerApiToken");
-
         int responseCode = 0;
-        BufferedReader reader;
+        BufferedReader reader = null;
         try {
             responseCode = connection.getResponseCode();
-            reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            if(connection.getInputStream() != null)
+                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
         } catch (Exception e) {
             System.out.println("API responded with an error response");
-            reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+            if(connection.getErrorStream() != null)
+                reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
         }
 
         System.out.println("API responded with response code: " + responseCode);
@@ -50,10 +66,12 @@ public class ApiUtil {
         StringBuilder response = new StringBuilder();
         String line;
 
-        while ((line = reader.readLine()) != null) {
-            response.append(line);
+        if (reader != null){
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
         }
-        reader.close();
 
         connection.disconnect();
 
