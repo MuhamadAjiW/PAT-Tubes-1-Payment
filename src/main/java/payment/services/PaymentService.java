@@ -5,9 +5,11 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import payment.enums.HttpRequestMethod;
 import payment.enums.PaymentStatus;
 import payment.repository.InvoiceRepository;
 import payment.models.Invoice;
+import payment.util.ApiUtil;
 import payment.util.FailureUtil;
 import payment.util.SignatureUtil;
 import payment.util.classes.InvoiceRequest;
@@ -24,13 +26,32 @@ public class PaymentService {
     private final InvoiceRepository invoiceRepository;
     private final RabbitTemplate rabbitTemplate;
 
-    public static String generateInvoiceNumber() {
-        return "INV" + UUID.randomUUID().toString().toUpperCase();
-    }
+    private String invoiceWebhook;
+    private String paymentWebhook;
+
     @Autowired
     public PaymentService(InvoiceRepository invoiceRepository, RabbitTemplate rabbitTemplate){
         this.invoiceRepository = invoiceRepository;
         this.rabbitTemplate = rabbitTemplate;
+
+        try {
+            Response response = ApiUtil.call(ApiUtil.TicketServiceURL + "/webhook/clients", HttpRequestMethod.POST, null);
+
+            if(response.isValid()){
+                ApiUtil.TicketWebhookToken = (String) ((JSONObject)response.getData()).get("token");
+                System.out.println(ApiUtil.TicketWebhookToken);
+
+            } else{
+                System.out.println("Webhook already registered");
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+            System.out.println("Payment Service failed to register its webhooks");
+        }
+    }
+
+    public static String generateInvoiceNumber() {
+        return "INV" + UUID.randomUUID().toString().toUpperCase();
     }
 
     @GetMapping("")
@@ -58,10 +79,7 @@ public class PaymentService {
 
             System.out.println(message);
 
-            rabbitTemplate.convertAndSend("payment-exchange", "outgoing-invoice-queue",
-                    new Response(message, false, null).toJsonString());
-
-            return ResponseEntity.ok().build();
+            return ResponseEntity.internalServerError().build();
         }
 
 
@@ -72,10 +90,16 @@ public class PaymentService {
         jsonResponse.put("url", url);
         jsonResponse.put("invoiceNumber", invoice.getInvoiceNumber());
 
-        rabbitTemplate.convertAndSend("payment-exchange", "outgoing-invoice-queue",
-                new Response("Invoice Request Success", true, jsonResponse).toJsonString());
+        try {
+            System.out.println("Triggering invoice request webhook");
+            Response response = ApiUtil.call(ApiUtil.TicketServiceURL, HttpRequestMethod.POST, jsonResponse);
+            System.out.println(response);
+        } catch (Exception e){
+            this.invoiceRepository.delete(invoice);
+            e.printStackTrace();
+        }
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(new Response("Invoice Request Success", true, jsonResponse).toJsonString());
     }
 
     @PostMapping(value = "/pay", params = "signature")
@@ -90,13 +114,9 @@ public class PaymentService {
         } catch (Exception e){
             e.printStackTrace();
             String message = "Failed to verify signature";
-
             System.out.println(message);
 
-            rabbitTemplate.convertAndSend("payment-exchange", "outgoing-payment-queue",
-                    new Response(message, false, null).toJsonString());
-
-            return ResponseEntity.ok().build();
+            return ResponseEntity.status(401).build();
         }
 
         if(valid){
@@ -106,13 +126,9 @@ public class PaymentService {
             } catch (Exception e){
                 e.printStackTrace();
                 String message = "Failed to decode invoice number";
-
                 System.out.println(message);
 
-                rabbitTemplate.convertAndSend("payment-exchange", "outgoing-payment-queue",
-                        new Response(message, false, null).toJsonString());
-
-                return ResponseEntity.ok().build();
+                return ResponseEntity.status(400).build();
             }
 
             if(signInvoiceNumber == null){
@@ -125,10 +141,7 @@ public class PaymentService {
                 System.out.println("Signature: " + signInvoiceNumber);
                 System.out.println("Body: " + paymentRequest.getInvoiceNumber());
 
-                rabbitTemplate.convertAndSend("payment-exchange", "outgoing-payment-queue",
-                        new Response(message, false, null).toJsonString());
-
-                return ResponseEntity.ok().build();
+                return ResponseEntity.status(401).build();
             }
 
             try {
@@ -137,12 +150,9 @@ public class PaymentService {
                 // Reject successfully paid invoices
                 if(invoice.getStatus() == PaymentStatus.DONE){
                     String message = "Payment has already been done";
-
                     System.out.println(message);
 
-                    rabbitTemplate.convertAndSend("payment-exchange", "outgoing-payment-queue",
-                            new Response(message, false, null).toJsonString());
-                    return ResponseEntity.ok().build();
+                    return ResponseEntity.status(409).build();
                 }
 
                 boolean fail = FailureUtil.simulate();
@@ -154,32 +164,20 @@ public class PaymentService {
                 invoice = this.invoiceRepository.save(invoice);
 
                 String message = "Payment success";
-
                 System.out.println(message);
-
-                rabbitTemplate.convertAndSend("payment-exchange", "outgoing-payment-queue",
-                        new Response(message, true, invoice).toJsonString());
 
                 return ResponseEntity.ok().build();
             } catch (Exception e){
                 String message = "Failed to execute query or generate pdf url";
-
                 System.out.println(message);
 
-                rabbitTemplate.convertAndSend("payment-exchange", "outgoing-payment-queue",
-                        new Response(message, false, null).toJsonString());
-
-                return ResponseEntity.ok().build();
+                return ResponseEntity.internalServerError().build();
             }
         } else{
             String message = "Invalid signature";
-
             System.out.println(message);
 
-            rabbitTemplate.convertAndSend("payment-exchange", "outgoing-payment-queue",
-                    new Response(message, false, null).toJsonString());
-
-            return ResponseEntity.ok().build();
+            return ResponseEntity.badRequest().build();
         }
     }
 
