@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 
 public class ApiUtil {
     // CONFIG: configure TicketServiceURL accordingly
+    public static String API_KEY = "paymentServerApiToken";
     public static String TicketServiceURL = "http://booking-app:3000";
     public static String TicketWebhookToken;
 
@@ -35,7 +36,7 @@ public class ApiUtil {
 
         connection.setRequestMethod(method.getString());
 
-        connection.setRequestProperty("Authorization", "Bearer paymentServerApiToken");
+        connection.setRequestProperty("Authorization", "Bearer " + API_KEY);
         if (apiKey != null){
             connection.setRequestProperty("API-Key", apiKey);
         }

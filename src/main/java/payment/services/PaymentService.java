@@ -49,9 +49,14 @@ public class PaymentService {
                 String paymentToken = (String) ((JSONObject)response.getData()).get("token");
                 ApiUtil.TicketWebhookToken = paymentToken;
 
+                WebhookToken token = this.webhookTokenRepository.findByAddress(ApiUtil.TicketServiceURL);
+                if(token != null){
+                    this.webhookTokenRepository.deleteByToken(token.getToken());
+                }
+
                 System.out.println(paymentToken);
 
-                WebhookToken token = new WebhookToken();
+                token = new WebhookToken();
                 token.setToken(paymentToken);
                 token.setAddress(ApiUtil.TicketServiceURL);
                 token.setDescription("Webhook for ticketing services");

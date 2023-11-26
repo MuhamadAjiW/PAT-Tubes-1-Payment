@@ -8,4 +8,5 @@ public class InvoiceRequest {
     private int acaraId;
     private int kursiId;
     private int userId;
+    private int bookingId;
 }
