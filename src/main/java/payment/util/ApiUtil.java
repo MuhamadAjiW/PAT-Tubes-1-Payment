@@ -13,7 +13,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 public class ApiUtil {
-    public static String TicketServiceURL = "http://[::1]:3100";
+    // CONFIG: configure TicketServiceURL accordingly
+    public static String TicketServiceURL = "http://booking-app:3000";
     public static String TicketWebhookToken;
 
     public static Response call(String apiUrl, HttpRequestMethod method) throws IOException{
@@ -75,10 +76,11 @@ public class ApiUtil {
 
         connection.disconnect();
 
-        JSONObject json = new JSONObject(response.toString());
+        JSONObject json = new JSONObject();
 
         Object data = null;
         try{
+            json = new JSONObject(response.toString());
             data = json.get("data");
         } catch (Exception e){
             System.out.println("API response does not have any data");

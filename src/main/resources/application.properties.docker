@@ -6,3 +6,4 @@ spring.rabbitmq.password=test-user
 spring.data.mongodb.host=payment-db
 spring.data.mongodb.port=27017
 spring.data.mongodb.database=paymentdb
+spring.data.mongodb.auto-index-creation=true
