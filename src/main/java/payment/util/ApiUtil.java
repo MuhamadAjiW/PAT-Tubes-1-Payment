@@ -75,17 +75,26 @@ public class ApiUtil {
 
         connection.disconnect();
 
+        JSONObject json = new JSONObject(response.toString());
+
+        Object data = null;
+        try{
+            data = json.get("data");
+        } catch (Exception e){
+            System.out.println("API response does not have any data");
+        }
+
         try {
-            JSONObject json = new JSONObject(response.toString());
             return new Response(
                     (String) json.get("message"),
                     (boolean) json.get("valid"),
-                    json.get("data")
-                    );
-        } catch (Exception e){
-            e.printStackTrace();
-            System.out.println("API responded unstandardized data");
-            return new Response("API responded unstandardized data", false, response.toString());
+                    data);
+        } catch (Exception e) {
+            System.out.println("API response is unstandardized");
+            return new Response(
+                    "Non standard response",
+                    false,
+                    response.toString());
         }
     }
 }
