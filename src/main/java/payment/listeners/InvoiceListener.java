@@ -18,8 +18,9 @@ public class InvoiceListener {
             JSONObject invoiceRequestJSON = new JSONObject(message);
             InvoiceRequest invoiceRequest = new InvoiceRequest();
             invoiceRequest.setEmail((String) invoiceRequestJSON.get("email"));
-            invoiceRequest.setEventId((Integer) invoiceRequestJSON.get("eventId"));
-            invoiceRequest.setTicketId((Integer) invoiceRequestJSON.get("ticketId"));
+            invoiceRequest.setAcaraId((Integer) invoiceRequestJSON.get("acaraId"));
+            invoiceRequest.setKursiId((Integer) invoiceRequestJSON.get("kursiId"));
+            invoiceRequest.setUserId((Integer) invoiceRequestJSON.get("userId"));
 
             paymentService.create(invoiceRequest);
         } catch (Exception e){

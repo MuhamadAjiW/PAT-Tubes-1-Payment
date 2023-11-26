@@ -37,15 +37,16 @@ def pay(invoiceNumber, endpoint):
 
 
 ## RabbitMQ
-def add_invoice_to_queue(email, event_id, ticket_id):
+def add_invoice_to_queue(email, event_id, ticket_id, user_id):
     rabbitmq_credentials = pika.PlainCredentials('test-user', 'test-user')
     connection = pika.BlockingConnection(pika.ConnectionParameters(rabbitmqHost, rabbitmqPort, '/', rabbitmq_credentials))
     channel = connection.channel()
 
     data = {
         "email": email,
-        "eventId": event_id,
-        "ticketId": ticket_id
+        "acaraId": event_id,
+        "kursiId": ticket_id,
+        "userId": user_id
     }
 
     channel.basic_publish(
@@ -66,7 +67,7 @@ if __name__ == "__main__":
     # response = pay("INVFC04B978-8FCC-44CA-AB50-CAA28B34959C",
                     # "/api/payments/pay?signature=VepxOcb2MZpYwVgA1K6vYsHEAYdGN2chMiyaqaRstwMnY6cPrEat9invV3yfMU_jwuSg--pJGycWRfkhLDsU3lgC13AtYndHbnr60Z4ti1XCPGgbYv7-9-fegiIQFviA")
 
-    add_invoice_to_queue("Test@email.com", 1, 1)            
+    add_invoice_to_queue("Test@email.com", 1, 1, 1)            
 
     # print("\nstatus code:", response.status_code)
     # print("Response content:")

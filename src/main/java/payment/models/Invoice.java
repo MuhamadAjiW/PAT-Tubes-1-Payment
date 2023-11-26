@@ -4,6 +4,7 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import payment.enums.PaymentStatus;
+import payment.util.classes.InvoiceRequest;
 
 import java.time.Instant;
 
@@ -12,9 +13,7 @@ import java.time.Instant;
 public class Invoice {
     @Id
     private String invoiceNumber;
-    private String email;
-    private int eventId;
-    private int ticketId;
+    private InvoiceRequest request;
     private Instant timestamp;
     private PaymentStatus status;
 }

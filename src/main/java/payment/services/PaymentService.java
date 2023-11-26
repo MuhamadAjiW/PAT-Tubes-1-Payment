@@ -93,14 +93,12 @@ public class PaymentService {
 
     @PostMapping("")
     public ResponseEntity<?> create(@RequestBody InvoiceRequest invoiceRequest){
-        System.out.println("Received invoice request: " + invoiceRequest.getEmail() + " " + invoiceRequest.getTicketId());
+        System.out.println("Received invoice request: " + invoiceRequest.getEmail() + " " + invoiceRequest.getKursiId());
 
         Invoice invoice = new Invoice();
         invoice.setInvoiceNumber(generateInvoiceNumber());
         invoice.setTimestamp(Instant.now());
-        invoice.setEmail(invoiceRequest.getEmail());
-        invoice.setEventId(invoiceRequest.getEventId());
-        invoice.setTicketId(invoiceRequest.getTicketId());
+        invoice.setRequest(invoiceRequest);
         invoice.setStatus(PaymentStatus.PENDING);
 
         String signature = SignatureUtil.generateSignature(invoice.getInvoiceNumber(), SignatureUtil.PaymentExpiry);
@@ -111,7 +109,6 @@ public class PaymentService {
 
             return ResponseEntity.internalServerError().build();
         }
-
 
         this.invoiceRepository.save(invoice);
         String url = "/api/payments/pay?signature=" + signature;

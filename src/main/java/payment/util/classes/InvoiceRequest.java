@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class InvoiceRequest {
     private String email;
-    private int eventId;
-    private int ticketId;
+    private int acaraId;
+    private int kursiId;
+    private int userId;
 }
