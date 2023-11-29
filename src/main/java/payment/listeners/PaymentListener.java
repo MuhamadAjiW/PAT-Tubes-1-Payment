@@ -16,7 +16,7 @@ public class PaymentListener {
 //    public void processIncomingInvoiceMessage(String message){
 //        try {
 //            JSONObject paymentRequestJSON = new JSONObject(message);
-//            PaymentRequest paymentRequest = new PaymentRequest();
+//            PaymentRezquest paymentRequest = new PaymentRequest();
 //            paymentRequest.setInvoiceNumber((String) paymentRequestJSON.get("invoiceNumber"));
 //
 //            paymentService.pay()

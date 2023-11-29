@@ -13,7 +13,7 @@ import java.util.Base64;
 
 // Naive implementation of signed urls using AES
 public class SignatureUtil {
-    public static final Duration PaymentExpiry = Duration.ofSeconds(300);
+    public static final Duration PaymentExpiry = Duration.ofSeconds(24 * 60 * 60);
 
     private static final SecretKey secretKey = new SecretKeySpec("signedsignedsignedsignedsignedee".getBytes(), "AES");
     private static final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss.SSS").withZone(ZoneId.systemDefault());

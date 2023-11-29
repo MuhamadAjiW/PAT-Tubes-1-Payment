@@ -149,7 +149,7 @@ public class PaymentService {
                 String message = "Failed to decode invoice number";
                 System.out.println(message);
 
-                return ResponseEntity.status(400).build();
+                return ResponseEntity.status(400).body(new Response("Failed to decode invoice number", true, null).toJsonString());
             }
 
             if(signInvoiceNumber == null){
@@ -162,7 +162,7 @@ public class PaymentService {
                 System.out.println("Signature: " + signInvoiceNumber);
                 System.out.println("Body: " + paymentRequest.getInvoiceNumber());
 
-                return ResponseEntity.status(401).build();
+                return ResponseEntity.status(401).body(new Response("Invoice number did not match", true, null).toJsonString());
             }
 
             try {
@@ -173,44 +173,47 @@ public class PaymentService {
                     String message = "Payment has already been done";
                     System.out.println(message);
 
-                    return ResponseEntity.status(409).build();
+                    return ResponseEntity.status(409).body(new Response("Payment has already been done", true, null).toJsonString());
                 }
 
                 boolean fail = FailureUtil.simulate();
+                String message = "Payment success";
                 if(fail){
                     invoice.setStatus(PaymentStatus.FAILED);
+                    message = "Payment error, please try again";
                 } else{
                     invoice.setStatus(PaymentStatus.DONE);
                 }
                 invoice = this.invoiceRepository.save(invoice);
 
-                JSONObject jsonResponse = new JSONObject(invoice);
+                JSONObject jsonResponse = new JSONObject(new Response(message, !fail, invoice));
                 System.out.println(jsonResponse);
 
                 try{
                     System.out.println("Triggering invoice request webhook");
-                    Response response = ApiUtil.call(TicketServiceWebhookPaymentEndpoint, HttpRequestMethod.POST, jsonResponse, ApiUtil.TicketWebhookToken);
+                    Response response = ApiUtil.call(TicketServiceWebhookPaymentEndpoint, HttpRequestMethod.POST,
+                            jsonResponse, ApiUtil.TicketWebhookToken);
 
                     System.out.println("Payment done");
-                    return ResponseEntity.ok().build();
+                    return ResponseEntity.ok().body(new Response(message, !fail, null).toJsonString());
                 } catch (Exception e){
                     invoice.setStatus(PaymentStatus.ERROR);
                     this.invoiceRepository.save(invoice);
 
                     System.out.println("Failed to call webhook");
-                    return ResponseEntity.internalServerError().build();
+                    return ResponseEntity.internalServerError().body(new Response("Failed to call webhook", false, null).toJsonString());
                 }
             } catch (Exception e){
                 String message = "Failed to execute query or generate pdf url";
                 System.out.println(message);
 
-                return ResponseEntity.internalServerError().build();
+                return ResponseEntity.internalServerError().body(new Response("Failed to execute query or generate pdf url", false, null).toJsonString());
             }
         } else{
             String message = "Invalid signature";
             System.out.println(message);
 
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(new Response("Invalid signature", true, null).toJsonString());
         }
     }
 
